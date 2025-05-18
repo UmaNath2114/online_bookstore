@@ -1,27 +1,36 @@
 package com.project.bookStore.Controller;
 
-import com.project.bookStore.Entity.BookOrder;
-import com.project.bookStore.Entity.CartItem;
-import com.project.bookStore.Service.CartService;
+import com.project.bookStore.Entity.Order;
+import com.project.bookStore.Entity.User;
 import com.project.bookStore.Service.OrderService;
-import org.springframework.beans.factory.annotation.Autowired;
+import com.project.bookStore.Service.UserService;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
 @RestController
 @RequestMapping("/api/orders")
-@CrossOrigin("*")
 public class OrderController {
-    @Autowired private OrderService service;
+    private final OrderService orderService;
+    private final UserService userService;
 
-    @PostMapping("/{username}")
-    public BookOrder placeOrder(@PathVariable String username) {
-        return service.placeOrder(username);
+    public OrderController(OrderService orderService, UserService userService) {
+        this.orderService = orderService;
+        this.userService = userService;
     }
 
-    @GetMapping("/{username}")
-    public List<BookOrder> getOrders(@PathVariable String username) {
-        return service.getOrders(username);
+    @PostMapping("/place/{userId}")
+    public Order placeOrder(@PathVariable Long userId) {
+        User user = userService.findById(userId)
+                .orElseThrow(() -> new RuntimeException("User not found"));
+        return orderService.placeOrder(user);
+    }
+
+    @GetMapping("/{userId}")
+    public List<Order> getOrders(@PathVariable Long userId) {
+        User user = userService.findById(userId)
+                .orElseThrow(() -> new RuntimeException("User not found"));
+        return orderService.getOrders(user);
     }
 }
+

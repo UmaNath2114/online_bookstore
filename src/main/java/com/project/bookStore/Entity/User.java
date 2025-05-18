@@ -1,24 +1,20 @@
 package com.project.bookStore.Entity;
-
 import jakarta.persistence.*;
 import lombok.*;
-
-import java.time.LocalDateTime;
-import java.util.List;
 
 @Entity
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-public class BookOrder {
+@Table(name = "users")
+public class User {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    @Column(unique = true)
     private String username;
-    private double total;
-    private LocalDateTime orderDate;
 
-    @OneToMany(cascade = CascadeType.ALL)
-    private List<CartItem> items;
+    private String password; // store plaintext for now (for simplicity, not recommended)
 }
+

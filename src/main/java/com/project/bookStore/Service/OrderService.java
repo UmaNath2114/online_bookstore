@@ -1,36 +1,68 @@
 package com.project.bookStore.Service;
 
-import com.project.bookStore.Entity.BookOrder;
-import com.project.bookStore.Entity.CartItem;
+import com.project.bookStore.Entity.*;
+import com.project.bookStore.Repository.BookRepository;
 import com.project.bookStore.Repository.CartItemRepository;
 import com.project.bookStore.Repository.OrderRepository;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-import java.time.LocalDateTime;
 
+import java.time.LocalDateTime;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Service
 public class OrderService {
-    @Autowired
-    private OrderRepository orderRepo;
-    @Autowired private CartItemRepository cartRepo;
+    private final OrderRepository orderRepo;
+    private final CartItemRepository cartRepo;
+    private final BookRepository bookRepo;
+    private final CartService cartService;
 
-    public BookOrder placeOrder(String username) {
-        List<CartItem> items = cartRepo.findByUsername(username);
-        double total = items.stream().mapToDouble(i -> i.getPrice() * i.getQuantity()).sum();
-
-        BookOrder order = new BookOrder();
-        order.setUsername(username);
-        order.setItems(items);
-        order.setTotal(total);
-        order.setOrderDate(LocalDateTime.now());
-
-        cartRepo.deleteByUsername(username); // clear cart after order
-        return orderRepo.save(order);
+    public OrderService(OrderRepository orderRepo, CartItemRepository cartRepo,
+                        BookRepository bookRepo, CartService cartService) {
+        this.orderRepo = orderRepo;
+        this.cartRepo = cartRepo;
+        this.bookRepo = bookRepo;
+        this.cartService = cartService;
     }
 
-    public List<BookOrder> getOrders(String username) {
-        return orderRepo.findByUsername(username);
+    public Order placeOrder(User user) {
+        List<CartItem> cartItems = cartRepo.findByUser(user);
+
+        if (cartItems.isEmpty()) {
+            throw new RuntimeException("Cart is empty");
+        }
+
+        Order order = new Order();
+        order.setUser(user);
+        order.setOrderDate(LocalDateTime.now());
+
+        List<OrderItem> orderItems = cartItems.stream().map(cartItem -> {
+            Book book = cartItem.getBook();
+
+            if (book.getStock() < cartItem.getQuantity()) {
+                throw new RuntimeException("Not enough stock for: " + book.getTitle());
+            }
+
+            book.setStock(book.getStock() - cartItem.getQuantity());
+            bookRepo.save(book);
+
+            OrderItem orderItem = new OrderItem();
+            orderItem.setOrder(order);
+            orderItem.setBook(book);
+            orderItem.setQuantity(cartItem.getQuantity());
+            orderItem.setPrice(book.getPrice());
+            return orderItem;
+        }).collect(Collectors.toList());
+
+        order.setOrderItems(orderItems);
+
+        Order savedOrder = orderRepo.save(order);
+        cartService.clearCart(user);
+
+        return savedOrder;
+    }
+
+    public List<Order> getOrders(User user) {
+        return orderRepo.findByUser(user);
     }
 }

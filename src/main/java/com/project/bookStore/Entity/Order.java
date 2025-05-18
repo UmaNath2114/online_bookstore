@@ -1,14 +1,16 @@
 package com.project.bookStore.Entity;
-
 import jakarta.persistence.*;
 import lombok.*;
+
+import java.time.LocalDateTime;
+import java.util.List;
 
 @Entity
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-@Table(name = "cart_items")
-public class CartItem {
+@Table(name = "orders")
+public class Order {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
@@ -16,8 +18,8 @@ public class CartItem {
     @ManyToOne
     private User user;
 
-    @ManyToOne
-    private Book book;
+    private LocalDateTime orderDate;
 
-    private int quantity;
+    @OneToMany(mappedBy = "order", cascade = CascadeType.ALL)
+    private List<OrderItem> orderItems;
 }

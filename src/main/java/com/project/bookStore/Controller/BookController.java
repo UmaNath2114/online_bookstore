@@ -1,39 +1,50 @@
 package com.project.bookStore.Controller;
 
+
+
 import com.project.bookStore.Entity.Book;
 import com.project.bookStore.Service.BookService;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
 @RestController
-@RequestMapping("/api/books")
-@CrossOrigin("*") // allow frontend access
+@RequestMapping("/api/books")  // All endpoints here start with /api/books
 public class BookController {
 
-    private final BookService service;
+    @Autowired
+    private BookService bookService;
 
-    public BookController(BookService service) {
-        this.service = service;
+    // 🔹 1. GET all books
+    @GetMapping
+    public List<Book> getAllBooks() {
+        return bookService.getAllBooks();
     }
 
-    @PostMapping("/add-book")
-    public Book save(@RequestBody Book book) {
-        return service.save(book);
-    }
-
-    @GetMapping("/get-book")
-    public List<Book> getAll() {
-        return service.getAll();
-    }
-
+    // 🔹 2. GET one book by ID
     @GetMapping("/{id}")
-    public Book getById(@PathVariable Long id) {
-        return service.getById(id);
+    public ResponseEntity<Book> getBook(@PathVariable Long id) {
+        return ResponseEntity.of(bookService.getBookById(id));
     }
 
+    // 🔹 3. POST- Add a new book
+    @PostMapping
+    public Book createBook(@RequestBody Book book) {
+        return bookService.saveBook(book);
+    }
+
+    // 🔹 4. PUT - Update a book by ID
+    @PutMapping("/{id}")
+    public Book updateBook(@PathVariable Long id, @RequestBody Book updatedBook) {
+        updatedBook.setId(id);
+        return bookService.saveBook(updatedBook);
+    }
+
+    // 🔹 5. DELETE - Delete a book by ID
     @DeleteMapping("/{id}")
-    public void delete(@PathVariable Long id) {
-        service.deleteById(id);
+    public void deleteBook(@PathVariable Long id) {
+        bookService.deleteBook(id);
     }
 }
