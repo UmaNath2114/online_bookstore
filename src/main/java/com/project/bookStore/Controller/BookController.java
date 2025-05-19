@@ -18,7 +18,7 @@ public class BookController {
     private BookService bookService;
 
     // 🔹 1. GET all books
-    @GetMapping
+    @GetMapping("/get-books")
     public List<Book> getAllBooks() {
         return bookService.getAllBooks();
     }
@@ -30,7 +30,7 @@ public class BookController {
     }
 
     // 🔹 3. POST- Add a new book
-    @PostMapping
+    @PostMapping("/add-book")
     public Book createBook(@RequestBody Book book) {
         return bookService.saveBook(book);
     }
